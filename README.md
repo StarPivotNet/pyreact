@@ -1,5 +1,7 @@
 # Pyreact
 
+> 当前项目为实验版本，**现已停止维护**，正式版: https://github.com/EnderWolf006/Pyreactmc
+
 面向 **网易我的世界（基岩版）ModSDK** 的 Python UI 声明式渲染框架（实验性）。
 
 Pyreact 提供类似 React 的组件函数 + Hooks 写法，将组件树（VNode）经过 Diff、Flex 布局和运行时提交后，渲染为网易 `ScreenNode` / JsonUI 控件树。
