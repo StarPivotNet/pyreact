@@ -2,6 +2,7 @@
 
 import http.client
 import json
+import socket
 from pathlib import Path
 import tempfile
 import threading
@@ -57,6 +58,12 @@ class BrowserServerTests(unittest.TestCase):
         self.assertEqual(status, 200)
         snapshot = json.loads(self.request("/api/tree")[1])
         self.assertEqual((snapshot["width"], snapshot["height"]), (480, 320))
+
+    def test_idle_browser_connection_does_not_block_requests(self):
+        with socket.create_connection((self.host, self.port), timeout=5):
+            status, body, _ = self.request("/api/tree")
+            self.assertEqual(status, 200)
+            self.assertEqual(json.loads(body)["tree"]["type"], "Panel")
 
     def test_invalid_origin_cannot_mutate_state(self):
         for origin in ("https://evil.example", "null", "http://localhost:1"):

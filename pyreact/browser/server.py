@@ -4,7 +4,7 @@ import mimetypes
 import threading
 import traceback
 import webbrowser
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -14,7 +14,7 @@ STATIC_ROOT = Path(__file__).with_name("static")
 MAX_BODY = 65536
 
 
-class PreviewServer(HTTPServer):
+class PreviewServer(ThreadingHTTPServer):
     def __init__(self, address, root, width, height, resource_root):
         self.root = root
         self.runtime = BrowserRuntime(root, width=width, height=height)
