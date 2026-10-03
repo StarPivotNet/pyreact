@@ -21,6 +21,32 @@ Pyreact 提供类似 React 的组件函数 + Hooks 写法，将组件树（VNode
 
 ## 快速开始
 
+### 在浏览器中验收（无需启动游戏）
+
+本分支增加了独立的浏览器后端，使用现有 `ComponentInstance`、Hooks、VNode Diff 和 Flex 布局引擎；浏览器只负责显示计算好的布局并回传交互。需要 **Python 3.9+**，运行服务不需要安装额外依赖。
+
+在仓库根目录运行：
+
+```bash
+python -m pyreact.browser
+```
+
+默认打开 `http://127.0.0.1:8765`，内置示例支持计数、输入筛选、列表选择和滚动。工具栏可以改变画布尺寸、重置组件状态和导出 JSON 树快照。按 `Ctrl+C` 停止服务。页面刷新保留当前服务状态；修改 Python 源码后重新启动服务。
+
+也可以直接验收原有组件，无需改成另一套网页 UI：
+
+```bash
+python -m pyreact.browser --app PyreactExampleScript.examples.CounterDemo:CounterDemo
+python -m pyreact.browser --app PyreactExampleScript.examples.FriendApp:FriendApp --width 960 --height 640
+python -m pyreact.browser --project "D:/YourAddon/behavior_pack" --app YourMod.ui:YourApp --resource-root "D:/YourAddon/resource_pack"
+```
+
+`--app` 指向一个 `@Component` 函数；组件所在模块应可独立导入，将 `mod.client.extraClientApi`、ScreenNode 注册和游戏数据获取放在游戏壳中，或由自己的预览入口提供测试数据。`--resource-root` 可选，用来解析资源包内的纹理。其他参数：`--port 8766`、`--no-open`、`--width`、`--height`；宽高范围为 1–4096。
+
+浏览器验收覆盖组件状态、布局坐标、按钮三态、点击、文本输入、滚动和视口变化。文字尺寸采用估算，缺失纹理、`Item` / `PaperDoll`、原生控件 ref、触摸回调和游戏动画会在页面提示能力限制；这些引擎特性仍需在游戏内验收。一个服务进程共享一份组件状态，需要独立状态时用不同端口启动多个服务。
+
+自动回归和 HTTP 调试接口见 [浏览器验收说明](docs/browser-preview.md)。游戏运行时仍使用下面的原有接入方式。
+
 如只想体验示例，可以修改 `sync_to_test.cmd` 中的参数后运行同步脚本。
 
 ### 1. 集成到你的 AddOn

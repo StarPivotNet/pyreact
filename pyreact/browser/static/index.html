@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pyreact · 浏览器验收</title>
+  <link rel="stylesheet" href="/preview.css">
+  <script defer src="/renderer.js"></script>
+  <script defer src="/preview.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon" aria-hidden="true">P</span><strong>Pyreact</strong><span class="brand-divider"></span><span>浏览器验收</span></div>
+    <div id="connection" class="connection" role="status">正在连接</div>
+  </header>
+  <main>
+    <section class="intro">
+      <div><div class="eyebrow">UI PREVIEW WORKSPACE</div><h1 id="app-name">你的界面，即时可验</h1><p>使用 Pyreact 的 Python 布局与组件状态，在浏览器中检查交互和尺寸适配。</p></div>
+      <button id="reset" type="button" class="secondary">重置应用</button>
+    </section>
+    <section class="workspace" aria-label="界面预览工作台">
+      <form id="viewport-form" class="toolbar">
+        <div class="presets" role="group" aria-label="视口预设">
+          <button type="button" data-size="960,540">桌面 <span>960 × 540</span></button>
+          <button type="button" data-size="640,360">紧凑 <span>640 × 360</span></button>
+          <button type="button" data-size="360,640">竖屏 <span>360 × 640</span></button>
+        </div>
+        <div class="dimensions"><label>宽 <input id="viewport-width" type="number" min="160" max="4096" value="960" required></label><span>×</span><label>高 <input id="viewport-height" type="number" min="120" max="4096" value="540" required></label><button type="submit" class="apply">应用</button></div>
+      </form>
+      <div id="error" class="error" role="alert" hidden></div>
+      <div class="canvas-area"><div id="canvas" class="canvas" aria-label="Pyreact 应用画布"></div></div>
+      <footer class="workspace-footer"><span><span class="live-dot"></span>Python 布局引擎<span class="footer-divider">/</span><span id="viewport-size">—</span></span><span><span id="node-count">0</span> 个节点<span class="footer-divider">/</span>修订 <span id="revision">—</span></span><button id="export" type="button">导出布局树 ↗</button></footer>
+    </section>
+    <section class="notes" aria-label="验收能力说明">
+      <div><h2>在这里验证</h2><p>组件布局、点击回调、输入状态、滚动区域及按钮三态。调整视口即可检查不同屏幕尺寸。</p></div>
+      <div><h2>仍需游戏验证</h2><p>原生字体与纹理效果、实体和物品渲染、游戏事件及 ModSDK 接口。Item / PaperDoll 在此显示占位。</p></div>
+    </section>
+    <div id="warnings" class="warnings" hidden><h2>预览提示</h2><ul id="warning-list"></ul></div>
+  </main>
+</body>
+</html>

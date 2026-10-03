@@ -10,6 +10,7 @@ metadata:
 
 ## 我能做什么
 
+- 在普通浏览器中验收纯 UI 组件：`python -m pyreact.browser`，不必启动游戏
 - 启动携带日志服务的游戏实例（自动生成 `.cppconfig`，无需依赖 mcpywrap）
 - 实时流式接收游戏日志，log server 跟随游戏进程生命周期自动退出
 - 热重载行为包脚本、重启世界
@@ -417,6 +418,14 @@ python simulate_and_diff.py click --node-id ready_btn --output-before before.jso
 - 需安装依赖：`pip install pyperclip psutil`
 
 ## Agent 推荐工作流
+
+### 优先在浏览器验收普通 UI
+
+框架仓库根目录运行 `python -m pyreact.browser --no-open`，再通过真实浏览器打开输出的本机 URL。使用 `--app 模块:组件` 验收指定 `@Component`，使用 `--project` 添加行为包导入路径，使用 `--resource-root` 指定纹理资源包。
+
+浏览器后端复用现有 Python 状态和布局逻辑，支持按钮三态、点击、输入、滚动、改变画布尺寸和导出树快照。可用 `python -m unittest discover -s tests -v` 运行回归测试。HTTP 接口和详细边界见仓库 `docs/browser-preview.md`。
+
+普通布局和交互不要求先开游戏。模型渲染、游戏动画、触摸回调、原生控件 ref、游戏事件和网络同步仍需游戏验收；不能把浏览器占位当成这些能力已通过。浏览器入口是独立 Python 3.9+ 开发工具，下面游戏工具的 Python 2、剪切板和 `debug_mode` 约束只针对游戏通道。
 
 ### UI 树检查
 
