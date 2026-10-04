@@ -49,28 +49,34 @@ def json_value(value):
 
 
 class TreeSerializer:
-    def __init__(self, builder, layout_engine, handlers, warnings):
+    def __init__(self, builder, layout_engine, handlers, warnings, identities=None):
         self.builder = builder
         self.layout_engine = layout_engine
         self.handlers = handlers
         self.warnings = warnings
+        self.identities = identities
+        self.refs = {}
+        self.animations = {}
 
     def warn(self, message):
         if message not in self.warnings:
             self.warnings.append(message)
 
     def serialize(self, node, node_id='root', offset=(0.0, 0.0), state_depth=0):
+        node_id = node.props.get('__browser_id__', node_id)
         props = {}
         for key, value in node.props.items():
+            if key == '__browser_id__':
+                continue
             if key in ('onClick', 'onChange', 'onTouch') and callable(value):
                 props[key] = True
                 self.handlers.setdefault(node_id, {})[key] = value
-                if key == 'onTouch':
-                    self.warn('onTouch 与 Slider 拖动需要游戏运行时；浏览器当前支持点击和输入。')
             elif key == 'ref':
-                self.warn('浏览器不绑定原生控件 ref；原生控件 API 调用需要在游戏中验收。')
+                if value is not None:
+                    self.refs[node_id] = value
             elif key == '__animation__':
-                self.warn('游戏原生动画在浏览器中仅显示静态布局。')
+                if isinstance(value, dict):
+                    self.animations[node_id] = value
             elif not callable(value):
                 props[key] = json_value(value)
         if node.node_type == 'Label':
@@ -94,6 +100,8 @@ class TreeSerializer:
                 if element is None:
                     continue
                 tree = self.builder.build_tree(element)
+                if self.identities is not None:
+                    self.identities.assign(tree, node_id + '/states/' + state)
                 shadow = self.layout_engine.calculate(tree, layout.get('width', 0), layout.get('height', 0))
                 result['states'][state] = self.serialize(
                     shadow, node_id + '/states/' + state,

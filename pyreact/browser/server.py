@@ -74,7 +74,8 @@ class PreviewHandler(BaseHTTPRequestHandler):
             self._asset(path[len("/assets/"):])
             return
         name = "index.html" if path == "/" else path.lstrip("/")
-        if name not in {"index.html", "preview.css", "preview.js", "renderer.js"}:
+        if name not in {"index.html", "preview.css", "preview.js", "renderer.js",
+                        "animations.js", "pointer.js"}:
             self._reply(404, {"error": "Not found"})
             return
         self._file(STATIC_ROOT / name)

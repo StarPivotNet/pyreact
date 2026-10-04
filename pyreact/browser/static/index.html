@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pyreact · 浏览器验收</title>
   <link rel="stylesheet" href="/preview.css">
+  <script defer src="/animations.js"></script>
+  <script defer src="/pointer.js"></script>
   <script defer src="/renderer.js"></script>
   <script defer src="/preview.js"></script>
 </head>
@@ -32,7 +34,7 @@
       <footer class="workspace-footer"><span><span class="live-dot"></span>Python 布局引擎<span class="footer-divider">/</span><span id="viewport-size">—</span></span><span><span id="node-count">0</span> 个节点<span class="footer-divider">/</span>修订 <span id="revision">—</span></span><button id="export" type="button">导出布局树 ↗</button></footer>
     </section>
     <section class="notes" aria-label="验收能力说明">
-      <div><h2>在这里验证</h2><p>组件布局、点击回调、输入状态、滚动区域及按钮三态。调整视口即可检查不同屏幕尺寸。</p></div>
+      <div><h2>在这里验证</h2><p>组件布局、点击输入、触摸拖动、Slider、滚动区域及进入退出动画。调整视口即可检查不同屏幕尺寸。</p></div>
       <div><h2>仍需游戏验证</h2><p>原生字体与纹理效果、实体和物品渲染、游戏事件及 ModSDK 接口。Item / PaperDoll 在此显示占位。</p></div>
     </section>
     <div id="warnings" class="warnings" hidden><h2>预览提示</h2><ul id="warning-list"></ul></div>

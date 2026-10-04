@@ -11,7 +11,11 @@
   let pending = 0;
   let refreshing = false;
   let actionError = false;
+  let generation = 0;
+  let actionSerial = 0;
+  let resetting = false;
   const renderer = new window.PreviewRenderer(byId("canvas"), payload => {
+    if (resetting) return;
     if (payload.event === "input") renderer.inputPending(payload.id, 1);
     enqueue("/api/event", payload, () => {
       if (payload.event === "input") renderer.inputPending(payload.id, -1);
@@ -75,20 +79,26 @@
   }
 
   function enqueue(path, payload, settle = () => {}) {
+    const currentGeneration = generation;
+    actionSerial++;
     pending++;
     queue = queue.then(async () => {
       let settled = false;
       try {
+        if (currentGeneration !== generation) return;
         const result = await request(path, payload);
+        if (currentGeneration !== generation) return;
         settle();
         settled = true;
         if (path === "/api/reset") renderer.reset();
         apply(result);
       } catch (error) {
-        actionError = true;
-        showError(error);
+        if (currentGeneration === generation) {
+          actionError = true;
+          showError(error);
+        }
       } finally {
-        if (!settled) settle();
+        if (!settled && currentGeneration === generation) settle();
         pending--;
       }
     });
@@ -108,8 +118,15 @@
   byId("reset").addEventListener("click", async event => {
     const button = event.currentTarget;
     button.disabled = true;
-    await enqueue("/api/reset", {});
-    button.disabled = false;
+    resetting = true;
+    generation++;
+    renderer.reset();
+    try {
+      await enqueue("/api/reset", {});
+    } finally {
+      resetting = false;
+      button.disabled = false;
+    }
   });
   byId("export").addEventListener("click", () => {
     if (!snapshot) return;
@@ -121,13 +138,14 @@
 
   async function refresh() {
     if (pending || refreshing || document.hidden) return;
+    const currentAction = actionSerial;
     refreshing = true;
     try {
       const result = await request("/api/tree");
       // A newer user action can arrive while this read is in flight.
-      if (!pending) apply(result, false);
+      if (!pending && currentAction === actionSerial) apply(result, false);
     } catch (error) {
-      if (!pending) showError(error);
+      if (!pending && currentAction === actionSerial) showError(error);
     } finally {
       refreshing = false;
     }
