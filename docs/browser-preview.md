@@ -17,6 +17,9 @@ python -m pyreact.browser --app pyreact.browser.interaction_demo:InteractionDemo
 # 现有动画示例：进入/退出、连续过渡、列表、缓动与延迟
 python -m pyreact.browser --app PyreactExampleScript.examples.AnimationDemo:AnimationDemo
 
+# 游戏物品图标和普通方块预览（自动发现本机 MC Studio 原版资源）
+python -m pyreact.browser --app pyreact.browser.item_demo:ItemDemo
+
 # 确定性离线事件与 RPC 场景
 python -m pyreact.browser --app pyreact.browser.scenario_demo:ScenarioDemo
 
@@ -59,7 +62,8 @@ node --test tests/test_browser_frontend.cjs
 | Animated | 浏览器本地逐帧播放进入、退出和 animate；退出期间保留不可交互副本，按动画运行标识去重完成回调 |
 | Label 文字 | 从本机游戏图集绘制位图字形，测量和绘制共用字宽、折行；缺少字体时明确提示系统字体回退 |
 | 纹理 | 从指定资源包加载；缺失图片显示占位，不内置游戏资源 |
-| Item / PaperDoll | 显式占位，不能验收游戏物品、实体和模型渲染 |
+| Item | 从本机资源包读取物品图标和普通方块材质，特殊模型或缺失资源明确提示；原生效果仍需游戏验收 |
+| PaperDoll | 显式占位，实体和模型渲染仍需游戏验收 |
 | 业务事件 / RPC 场景 | 显式注入 OfflineSession，模拟成功、拒绝、延迟、超时，记录并回放 JSONL；见[离线场景](offline-scenarios.md) |
 | 真实游戏事件 / 网络协议 / 服务端 / 引擎 API | 仍由游戏环境验证；离线会话不会自动替换 SDK |
 
@@ -72,6 +76,14 @@ node --test tests/test_browser_frontend.cjs
 浏览器直接使用本机图集绘制 ASCII、中文和数字，关闭画布平滑插值，不再用系统矢量字体模拟 `Label`。字宽来自透明像素边界，布局测量与绘制共用同一次折行算法；缺字使用图集中的问号。字体资产不随仓库分发，也不会上传。原生输入框和预览工具栏仍使用浏览器字体。
 
 这会复现游戏字形和位图缩放特征，但不是游戏渲染器仿真：字号基准仍沿用预览的近似值，游戏逻辑视口、GUI 缩放、设备像素比和原生采样可能造成差异。验收小字号时应把预览视口设为游戏的 UI 逻辑尺寸，而非直接使用游戏窗口物理像素。找不到字体时仍能预览，能力提示会明确标明回退；要验收游戏字形，应先配置字体再截图。
+
+### 游戏物品
+
+`Item(identifier='minecraft:diamond_sword', style=Style(width=48, height=48))` 在浏览器显示本机游戏贴图，无需更换组件。普通立方体方块使用材质绘制等轴三面预览。支持现有 `itemDict` 的物品名/附加值以及 `aux` 纹理变体；附魔为近似视觉提示。
+
+原版资源默认通过游戏字体目录及 MC Studio 安装位置自动发现。可使用 `--vanilla-root "D:/Minecraft/data/resource_packs/vanilla"` 固定版本；`--resource-root` 中的自定义资源优先覆盖原版。服务终端及 `/api/tree` 的 `items` 字段显示所选路径，修改资源文件后需重启预览服务。
+
+解析物品定义、`textures/item_texture.json`、`blocks.json` 和 `textures/terrain_texture.json`，缺少物品定义时可通过原版图集中的贴图名称解析常见工具。游戏资源仅从本机读取，不复制进仓库。未找到资源、特殊几何模型或不支持的材质会给出占位和原因；染色、药水、复杂模型和原生附魔效果仍需在游戏验证。此预览用于检查物品内容、尺寸和布局，不保证与原生渲染逐像素一致。
 
 ### 动画与 ref 的具体语义
 
@@ -94,6 +106,7 @@ node --test tests/test_browser_frontend.cjs
 | `POST /api/reset` | `{}`，清理 effects 并重新挂载 |
 | `GET /assets/textures/...` | 读取配置资源包内的图片，省略扩展名时尝试 `.png` |
 | `GET /fonts/default8.png`、`GET /fonts/glyph_XX.png` | 只读取配置字体目录中的字形图集，拒绝其他文件及路径越界 |
+| `GET /items/<资源包索引>/textures/...png` | 读取解析器允许的本机物品材质，拒绝路径越界 |
 
 树包含 `type`、`props`、`style`、`layout`、`children`，`layout.x/y` 是画布绝对坐标。事件寻址使用稳定实例 `id`；同父级、同类型、同 `key` 的节点移动时保留身份，卸载后重新挂载获得新身份。列表应提供稳定的业务 `key`。回调在 JSON 中仅标记可用，不序列化 Python 函数。按钮三态包含在 `states` 中。错误通过非 2xx 响应和页面错误提示报告，服务终端保留异常堆栈。
 

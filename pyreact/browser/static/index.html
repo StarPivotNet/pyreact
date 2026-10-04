@@ -8,6 +8,7 @@
   <script defer src="/animations.js"></script>
   <script defer src="/pointer.js"></script>
   <script defer src="/bitmap-font.js"></script>
+  <script defer src="/item-renderer.js"></script>
   <script defer src="/renderer.js"></script>
   <script defer src="/preview.js"></script>
 </head>
@@ -35,8 +36,8 @@
       <footer class="workspace-footer"><span><span class="live-dot"></span>Python 布局引擎<span class="footer-divider">/</span><span id="viewport-size">—</span></span><span><span id="node-count">0</span> 个节点<span class="footer-divider">/</span>修订 <span id="revision">—</span></span><button id="export" type="button">导出布局树 ↗</button></footer>
     </section>
     <section class="notes" aria-label="验收能力说明">
-      <div><h2>在这里验证</h2><p>组件布局、点击输入、触摸拖动、Slider、滚动区域及进入退出动画。调整视口即可检查不同屏幕尺寸。</p></div>
-      <div><h2>仍需游戏验证</h2><p>文字使用本机游戏的位图字形；游戏缩放与纹理效果、实体和物品渲染、游戏事件及 ModSDK 接口仍需实机确认。Item / PaperDoll 在此显示占位。</p></div>
+      <div><h2>在这里验证</h2><p>组件布局、点击输入、触摸拖动、Slider、滚动区域及进入退出动画。物品使用资源包纹理显示图标或标准方块三面预览，调整视口即可检查不同屏幕尺寸。</p></div>
+      <div><h2>仍需游戏验证</h2><p>文字使用本机游戏的位图字形；附魔光效为近似预览，特殊物品模型、实体 PaperDoll、游戏缩放与材质效果、游戏事件及 ModSDK 接口仍需实机确认。</p></div>
     </section>
     <div id="warnings" class="warnings" hidden><h2>预览提示</h2><ul id="warning-list"></ul></div>
   </main>

@@ -206,7 +206,9 @@ window.PreviewRenderer = class PreviewRenderer {
       }
     } else if (node.type === "Image") {
       this.renderImage(record);
-    } else if (["Item", "PaperDoll"].includes(node.type)) {
+    } else if (node.type === "Item") {
+      window.PyreactItemRenderer.render(record);
+    } else if (node.type === "PaperDoll") {
       visual.className = "pr-visual pr-placeholder";
       visual.textContent = `${node.type}\n${props.identifier || props.entityIdentifier || props.skeletonModelName || "游戏原生渲染"}`;
       visual.title = "需要在游戏中确认原生渲染效果";

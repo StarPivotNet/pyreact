@@ -18,6 +18,7 @@ def main():
     parser.add_argument("--height", type=int, default=640)
     parser.add_argument("--resource-root", help="Optional resource-pack root containing textures/")
     parser.add_argument("--font-root", help="Game font atlas directory; auto-detect MC Studio by default")
+    parser.add_argument("--vanilla-root", help="Vanilla resource-pack root for Item previews; auto-detect by default")
     parser.add_argument("--no-open", action="store_true", help="Do not open the system browser")
     args = parser.parse_args()
     for directory in reversed(args.project):
@@ -32,7 +33,8 @@ def main():
                     (args.app, error))
     try:
         serve(root, port=args.port, width=args.width, height=args.height,
-              resource_root=args.resource_root, open_browser=not args.no_open, font_root=args.font_root)
+              resource_root=args.resource_root, open_browser=not args.no_open, font_root=args.font_root,
+              vanilla_root=args.vanilla_root)
     except (OSError, ValueError, TypeError) as error:
         parser.exit(1, "Preview failed: %s\n" % error)
 

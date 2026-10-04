@@ -19,7 +19,7 @@ from .animation_protocol import AnimationRegistry
 class BrowserRuntime:
     """A synchronous component session backed by the existing core and layout."""
 
-    def __init__(self, root, width=960, height=640, font=None):
+    def __init__(self, root, width=960, height=640, font=None, items=None):
         if not callable(root) or not getattr(root, '__pyreact_component__', False):
             raise TypeError('Browser root must be a callable decorated with @Component')
         self.width, self.height = self._size(width, height)
@@ -36,6 +36,7 @@ class BrowserRuntime:
         self._animations = AnimationRegistry()
         self._builder = TreeBuilder()
         self.font = font
+        self.items = items
         self._reconciler = Reconciler()
         self._layout = LayoutEngine(TextMeasurer(
             native_measure=font.measure_text if font is not None else measure_text))
@@ -104,7 +105,7 @@ class BrowserRuntime:
                     ]
                     serialized = None
                     serializer = TreeSerializer(self._builder, self._layout, handlers, warnings,
-                                                self._identities, font=self.font)
+                                                self._identities, font=self.font, items=self.items)
                     if tree is not None:
                         shadow = self._layout.calculate(tree, self.width, self.height)
                         serialized = serializer.serialize(shadow)

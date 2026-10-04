@@ -59,6 +59,9 @@ h2 { font-size: 12px; margin: 0 0 7px; font-weight: 600; color: #65738b; }
 .pr-input { width: 100%; height: 100%; margin: 0; padding: 0 6px; border: 1px solid #bac4d4; border-radius: 2px; background: #fff; color: #1c293b; pointer-events: auto; font-size: 14px; }
 .pr-placeholder { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 5px; text-align: center; border: 1px dashed #b1bdce; background: repeating-linear-gradient(135deg, #e9edf3, #e9edf3 7px, #f3f5f8 7px, #f3f5f8 14px); color: #718098; overflow: hidden; font: 10px/1.4 monospace; }
 .pr-image { width: 100%; height: 100%; object-fit: fill; }
+.pr-item-preview { overflow: hidden; }
+.pr-item-canvas { display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+.pr-item-missing { overflow-wrap: anywhere; }
 .pr-state { display: none; pointer-events: none; }
 .pr-state * { pointer-events: none !important; }
 .pr-state[data-state="default"] { display: block; }

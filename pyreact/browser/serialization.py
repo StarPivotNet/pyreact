@@ -49,13 +49,15 @@ def json_value(value):
 
 
 class TreeSerializer:
-    def __init__(self, builder, layout_engine, handlers, warnings, identities=None, font=None):
+    def __init__(self, builder, layout_engine, handlers, warnings, identities=None, font=None,
+                 items=None):
         self.builder = builder
         self.layout_engine = layout_engine
         self.handlers = handlers
         self.warnings = warnings
         self.identities = identities
         self.font = font
+        self.items = items
         self.refs = {}
         self.animations = {}
 
@@ -82,7 +84,14 @@ class TreeSerializer:
                 props[key] = json_value(value)
         if node.node_type == 'Label':
             props['fontSizePixels'] = font_pixels(node.props.get('fontSize'))
-        if node.node_type in ('Item', 'PaperDoll'):
+        if node.node_type == 'Item' and self.items is not None:
+            preview = self.items.resolve(props)
+            props['itemPreview'] = preview
+            if preview['mode'] == 'missing':
+                self.warn('Item %s：%s' % (preview.get('identifier', ''), preview.get('reason', '缺少资源')))
+            elif preview['mode'] != 'empty':
+                self.warn('Item 使用本机资源预览；特殊模型、染色和附魔效果仍需游戏验收。')
+        elif node.node_type in ('Item', 'PaperDoll'):
             self.warn('%s 显示为占位；原生渲染需要在游戏中验收。' % node.node_type)
         layout = json_value(vars(node.layout)) if node.layout is not None else {}
         layout['x'] = layout.get('x', 0.0) + offset[0]
