@@ -19,7 +19,7 @@ from .animation_protocol import AnimationRegistry
 class BrowserRuntime:
     """A synchronous component session backed by the existing core and layout."""
 
-    def __init__(self, root, width=960, height=640):
+    def __init__(self, root, width=960, height=640, font=None):
         if not callable(root) or not getattr(root, '__pyreact_component__', False):
             raise TypeError('Browser root must be a callable decorated with @Component')
         self.width, self.height = self._size(width, height)
@@ -35,8 +35,10 @@ class BrowserRuntime:
         self._touch = TouchStreams()
         self._animations = AnimationRegistry()
         self._builder = TreeBuilder()
+        self.font = font
         self._reconciler = Reconciler()
-        self._layout = LayoutEngine(TextMeasurer(native_measure=measure_text))
+        self._layout = LayoutEngine(TextMeasurer(
+            native_measure=font.measure_text if font is not None else measure_text))
         self._component = ComponentInstance(root, rerender_callback=self._invalidate)
 
     @staticmethod
@@ -55,6 +57,12 @@ class BrowserRuntime:
         self._dirty = True
 
     def _control_changed(self):
+        if self.font is not None:
+            for node in self._controls.nodes.values():
+                if node['type'] == 'Label':
+                    props = node['props']
+                    props['fontBitmap'] = self.font.layout(
+                        props.get('content'), props, max_width=node['layout'].get('width'))
         self._revision += 1
         if self._snapshot is not None:
             self._snapshot['revision'] = self._revision
@@ -90,11 +98,13 @@ class BrowserRuntime:
                     self._identities.assign(tree)
                     handlers = {}
                     warnings = [
-                        '文字尺寸采用估算；游戏字体、纹理和原生渲染效果仍需在游戏中确认。',
+                        'Label 使用本机游戏位图字体；游戏 UI 缩放和原生渲染仍需游戏验收。'
+                        if self.font is not None else
+                        '未找到游戏字体：文字回退系统字体估算；可用 --font-root 指定游戏 font 目录。',
                     ]
                     serialized = None
                     serializer = TreeSerializer(self._builder, self._layout, handlers, warnings,
-                                                self._identities)
+                                                self._identities, font=self.font)
                     if tree is not None:
                         shadow = self._layout.calculate(tree, self.width, self.height)
                         serialized = serializer.serialize(shadow)

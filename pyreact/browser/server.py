@@ -9,15 +9,19 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 from .runtime import BrowserRuntime
+from .bitmap_font import BitmapFont
+from .font_discovery import discover_font_root
 
 STATIC_ROOT = Path(__file__).with_name("static")
 MAX_BODY = 65536
 
 
 class PreviewServer(ThreadingHTTPServer):
-    def __init__(self, address, root, width, height, resource_root):
+    def __init__(self, address, root, width, height, resource_root, font_root=None):
         self.root = root
-        self.runtime = BrowserRuntime(root, width=width, height=height)
+        detected_font = discover_font_root(font_root, resource_root)
+        self.font = BitmapFont(detected_font) if detected_font else None
+        self.runtime = BrowserRuntime(root, width=width, height=height, font=self.font)
         self.resource_root = Path(resource_root).resolve() if resource_root else None
         self.lock = threading.RLock()
         super().__init__(address, PreviewHandler)
@@ -25,6 +29,8 @@ class PreviewServer(ThreadingHTTPServer):
     def snapshot(self):
         result = self.runtime.snapshot()
         result["app"] = getattr(self.root, "__name__", "Component")
+        result["font"] = {"mode": "game-bitmap" if self.font else "system-fallback",
+                          "root": str(self.font.root) if self.font else None}
         return result
 
     def server_close(self):
@@ -73,9 +79,16 @@ class PreviewHandler(BaseHTTPRequestHandler):
         if path.startswith("/assets/"):
             self._asset(path[len("/assets/"):])
             return
+        if path.startswith("/fonts/"):
+            target = self.server.font.asset(path[len('/fonts/'):]) if self.server.font else None
+            if target is None:
+                self._reply(404, {"error": "Font sheet not found"})
+            else:
+                self._file(target)
+            return
         name = "index.html" if path == "/" else path.lstrip("/")
         if name not in {"index.html", "preview.css", "preview.js", "renderer.js",
-                        "animations.js", "pointer.js"}:
+                        "animations.js", "pointer.js", "bitmap-font.js"}:
             self._reply(404, {"error": "Not found"})
             return
         self._file(STATIC_ROOT / name)
@@ -148,7 +161,7 @@ class PreviewHandler(BaseHTTPRequestHandler):
         elif path == "/api/reset":
             width, height = runtime.width, runtime.height
             runtime.close()
-            self.server.runtime = BrowserRuntime(self.server.root, width, height)
+            self.server.runtime = BrowserRuntime(self.server.root, width, height, font=self.server.font)
         else:
             self._reply(404, {"error": "Not found"})
             return
@@ -163,19 +176,22 @@ class PreviewHandler(BaseHTTPRequestHandler):
             super().log_message(format_, *args)
 
 
-def create_server(root, host="127.0.0.1", port=0, width=960, height=640, resource_root=None):
+def create_server(root, host="127.0.0.1", port=0, width=960, height=640, resource_root=None,
+                  font_root=None):
     if host not in ("127.0.0.1", "localhost"):
         raise ValueError("Browser preview only binds to localhost")
     if resource_root and not Path(resource_root).is_dir():
         raise ValueError("--resource-root must be an existing directory")
-    return PreviewServer((host, port), root, width, height, resource_root)
+    return PreviewServer((host, port), root, width, height, resource_root, font_root)
 
 
 def serve(root, host="127.0.0.1", port=8765, width=960, height=640,
-          resource_root=None, open_browser=True):
-    server = create_server(root, host, port, width, height, resource_root)
+          resource_root=None, open_browser=True, font_root=None):
+    server = create_server(root, host, port, width, height, resource_root, font_root)
     url = "http://127.0.0.1:%s" % server.server_port
     print("Pyreact browser preview: %s\nPress Ctrl+C to stop." % url, flush=True)
+    print("Label font: %s" % (server.font.root if server.font else
+                              'system fallback (set --font-root for game glyphs)'), flush=True)
     if open_browser:
         webbrowser.open(url)
     try:

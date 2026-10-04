@@ -23,6 +23,9 @@ python -m pyreact.browser --app pyreact.browser.scenario_demo:ScenarioDemo
 # 验收自己的行为包组件和纹理
 python -m pyreact.browser --project "D:/YourAddon/behavior_pack" --app YourMod.ui:YourApp --resource-root "D:/YourAddon/resource_pack"
 
+# 指定与当前游戏版本相同的字体图集目录
+python -m pyreact.browser --font-root "D:/Minecraft/data/resource_packs/vanilla/font"
+
 # Python 回归测试，不需要游戏或浏览器
 python -m unittest discover -s tests -v
 
@@ -54,13 +57,21 @@ node --test tests/test_browser_frontend.cjs
 | 控件 ref | 浏览器代理支持 GetGlobalPosition / GetPosition / GetSize / SetPosition / SetSize；卸载时解绑 |
 | onTouch / Slider | Pointer Events 映射现有触摸协议；支持捕获、取消、拖出轨道、画布缩放和滚动坐标 |
 | Animated | 浏览器本地逐帧播放进入、退出和 animate；退出期间保留不可交互副本，按动画运行标识去重完成回调 |
-| 文字 | 按游戏字号比例估算测量，与游戏字体和换行可能不同 |
+| Label 文字 | 从本机游戏图集绘制位图字形，测量和绘制共用字宽、折行；缺少字体时明确提示系统字体回退 |
 | 纹理 | 从指定资源包加载；缺失图片显示占位，不内置游戏资源 |
 | Item / PaperDoll | 显式占位，不能验收游戏物品、实体和模型渲染 |
 | 业务事件 / RPC 场景 | 显式注入 OfflineSession，模拟成功、拒绝、延迟、超时，记录并回放 JSONL；见[离线场景](offline-scenarios.md) |
 | 真实游戏事件 / 网络协议 / 服务端 / 引擎 API | 仍由游戏环境验证；离线会话不会自动替换 SDK |
 
 对于普通 UI 布局、状态和交互，浏览器可作为独立验收入口。引擎专属效果仍保留游戏验收，不把浏览器显示结果视为游戏像素级一致性证明。
+
+### 游戏字体
+
+`Label` 优先使用 `--font-root` 指定的目录；未指定时查找资源包内的 `font/`，然后在 Windows 上通过 MC Studio 注册表位置查找最新已安装引擎的原版字体。目录应包含 `default8.png` 和 `glyph_XX.png`。服务器终端和 `/api/tree` 的 `font` 字段会显示实际使用的目录；不同游戏版本应显式指定，避免自动发现选中其他版本。
+
+浏览器直接使用本机图集绘制 ASCII、中文和数字，关闭画布平滑插值，不再用系统矢量字体模拟 `Label`。字宽来自透明像素边界，布局测量与绘制共用同一次折行算法；缺字使用图集中的问号。字体资产不随仓库分发，也不会上传。原生输入框和预览工具栏仍使用浏览器字体。
+
+这会复现游戏字形和位图缩放特征，但不是游戏渲染器仿真：字号基准仍沿用预览的近似值，游戏逻辑视口、GUI 缩放、设备像素比和原生采样可能造成差异。验收小字号时应把预览视口设为游戏的 UI 逻辑尺寸，而非直接使用游戏窗口物理像素。找不到字体时仍能预览，能力提示会明确标明回退；要验收游戏字形，应先配置字体再截图。
 
 ### 动画与 ref 的具体语义
 
@@ -82,6 +93,7 @@ node --test tests/test_browser_frontend.cjs
 | `POST /api/resize` | `{"width":960,"height":640}`，保留组件状态 |
 | `POST /api/reset` | `{}`，清理 effects 并重新挂载 |
 | `GET /assets/textures/...` | 读取配置资源包内的图片，省略扩展名时尝试 `.png` |
+| `GET /fonts/default8.png`、`GET /fonts/glyph_XX.png` | 只读取配置字体目录中的字形图集，拒绝其他文件及路径越界 |
 
 树包含 `type`、`props`、`style`、`layout`、`children`，`layout.x/y` 是画布绝对坐标。事件寻址使用稳定实例 `id`；同父级、同类型、同 `key` 的节点移动时保留身份，卸载后重新挂载获得新身份。列表应提供稳定的业务 `key`。回调在 JSON 中仅标记可用，不序列化 Python 函数。按钮三态包含在 `states` 中。错误通过非 2xx 响应和页面错误提示报告，服务终端保留异常堆栈。
 

@@ -185,6 +185,7 @@ window.PreviewRenderer = class PreviewRenderer {
     const {node, visual, input} = record;
     const props = node.props || {};
     if (node.type === "Label") {
+      if (window.PyreactBitmapFont?.render(visual, node)) return;
       visual.className = "pr-visual pr-label";
       visual.textContent = props.content == null ? "" : String(props.content);
       Object.assign(visual.style, {

@@ -49,12 +49,13 @@ def json_value(value):
 
 
 class TreeSerializer:
-    def __init__(self, builder, layout_engine, handlers, warnings, identities=None):
+    def __init__(self, builder, layout_engine, handlers, warnings, identities=None, font=None):
         self.builder = builder
         self.layout_engine = layout_engine
         self.handlers = handlers
         self.warnings = warnings
         self.identities = identities
+        self.font = font
         self.refs = {}
         self.animations = {}
 
@@ -86,6 +87,9 @@ class TreeSerializer:
         layout = json_value(vars(node.layout)) if node.layout is not None else {}
         layout['x'] = layout.get('x', 0.0) + offset[0]
         layout['y'] = layout.get('y', 0.0) + offset[1]
+        if node.node_type == 'Label' and self.font is not None:
+            props['fontBitmap'] = self.font.layout(
+                node.props.get('content'), node.props, max_width=layout.get('width'))
         result = {
             'id': node_id, 'type': node.node_type, 'props': props,
             'style': json_value(node.style), 'layout': layout,
